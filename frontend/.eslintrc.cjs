@@ -16,5 +16,7 @@ module.exports = {
     ],
     "react-hooks/exhaustive-deps": "off",
     '@typescript-eslint/no-unused-vars': 'off',
+    "react/jsx-uses-react": "off",
+    "react/react-in-jsx-scope": "off"
   },
 }
