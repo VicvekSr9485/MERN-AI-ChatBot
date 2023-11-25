@@ -23,7 +23,7 @@ const Footer = () => {
               Olamide
             </Link>
           </span>
-          💘
+          🐱‍🏍
         </p>
       </div>
     </footer>

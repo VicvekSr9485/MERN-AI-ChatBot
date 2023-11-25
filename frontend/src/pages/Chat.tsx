@@ -100,7 +100,6 @@ const Chat = () => {
             }}
           >
             {auth?.user?.name[0]}
-            {auth?.user?.name?.split(" ")[1][0]}
           </Avatar>
           <Typography sx={{ mx: "auto", fontFamily: "work sans" }}>
             You are talking to a ChatBOT
@@ -190,7 +189,7 @@ const Chat = () => {
               fontSize: "20px",
             }}
           />
-          <IconButton onClick={handleSubmit} sx={{ color: "white", mx: 1 }}>
+          <IconButton onClick={handleSubmit} sx={{ color: "white", mx: 1, mt: 4, }}>
             <IoMdSend />
           </IconButton>
         </div>
