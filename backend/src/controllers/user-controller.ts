@@ -39,6 +39,8 @@ export const userSignup = async (
       domain: req.hostname,
       signed: true,
       path: "/",
+      secure: true,
+      sameSite: 'none',
     });
 
     const token = createToken(user._id.toString(), user.email, "7d");
@@ -50,6 +52,8 @@ export const userSignup = async (
       expires,
       httpOnly: true,
       signed: true,
+      secure: true,
+      sameSite: 'none',
     });
 
     return res
@@ -85,6 +89,8 @@ export const userLogin = async (
       domain: req.hostname,
       signed: true,
       path: "/",
+      secure: true,
+      sameSite: 'none',
     });
 
     const token = createToken(user._id.toString(), user.email, "7d");
@@ -96,6 +102,8 @@ export const userLogin = async (
       expires,
       httpOnly: true,
       signed: true,
+      secure: true,
+      sameSite: 'none',
     });
 
     return res
@@ -150,6 +158,8 @@ export const userLogout = async (
       domain: req.hostname,
       signed: true,
       path: "/",
+      secure: true,
+      sameSite: 'none',
     });
 
     return res
