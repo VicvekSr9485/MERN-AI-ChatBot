@@ -3,12 +3,18 @@ import { getAllUsers, userLogin, userLogout, userSignup, verifyUser } from "../c
 import { loginValidator, signUpValidator, validate } from "../utils/validators.js";
 import { verifyToken } from "../utils/token-manager.js";
 
-const userRoutes  = Router();
+const userRoutes = Router();
 
-userRoutes.get("/", getAllUsers);
+// Public routes
 userRoutes.post("/signup", validate(signUpValidator), userSignup);
-userRoutes.post("/login", validate(loginValidator), userLogin)
-userRoutes.get("/auth-status", verifyToken, verifyUser)
-userRoutes.get("/logout", verifyToken, userLogout);
+userRoutes.post("/login", validate(loginValidator), userLogin);
+
+// Protected routes
+userRoutes.use(verifyToken);
+userRoutes.get("/auth-status", verifyUser);
+userRoutes.get("/logout", userLogout);
+
+// Admin-only route (should be protected further)
+userRoutes.get("/", getAllUsers);
 
 export default userRoutes;

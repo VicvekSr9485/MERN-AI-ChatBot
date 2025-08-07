@@ -1,30 +1,63 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { COOKIE_NAME } from "./constants.js";
+import { COOKIE_NAME, JWT_EXPIRES_IN } from "./constants.js";
 
-export const createToken = (id: string, email: string, expiresIn: string) => {
+export const createToken = (id: string, email: string, expiresIn: string = JWT_EXPIRES_IN) => {
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET environment variable is not set");
+    }
+    
     const payload = { id, email };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn
     });
     return token;
-}
+};
 
-export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.signedCookies[`${COOKIE_NAME}`]
+export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+    const token = req.signedCookies[COOKIE_NAME];
+    
     if (!token || token.trim() === "") {
-        return res.status(401).json({ message: "Token not received" })
+        return res.status(401).json({ message: "Authentication required" });
     }
-    return new Promise<void>((resolve, reject) => {
-        return jwt.verify(token, process.env.JWT_SECRET, (err, success) => {
-            if (err) {
-                reject(err.message)
-                return res.status(401).json({ message: "Token expired" })
-            } else {
-                resolve();
-                res.locals.jwtData = success
-                return next();
-            }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string, email: string };
+        res.locals.jwtData = decoded;
+        return next();
+    } catch (error) {
+        console.error("Token verification error:", error);
+        return res.status(401).json({ message: "Invalid or expired token" });
+    }
+};
+
+export const refreshToken = (req: Request, res: Response) => {
+    const token = req.signedCookies[COOKIE_NAME];
+    
+    if (!token) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string, email: string };
+        const newToken = createToken(decoded.id, decoded.email);
+        
+        const expires = new Date();
+        expires.setDate(expires.getDate() + 7);
+        
+        res.cookie(COOKIE_NAME, newToken, {
+            path: "/",
+            domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
+            expires,
+            httpOnly: true,
+            signed: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
         });
-    });
-}
+        
+        return res.status(200).json({ message: "Token refreshed" });
+    } catch (error) {
+        console.error("Token refresh error:", error);
+        return res.status(401).json({ message: "Invalid or expired token" });
+    }
+};
