@@ -1,74 +1,69 @@
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import {
-  checkAuthStatus,
-  loginUser,
-  logoutUser,
-  signupUser,
-} from "../helpers/api-communicator";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { checkAuthStatus, loginUser, logoutUser, signupUser } from "../helpers/api-communicator.js";
 
-type User = {
+interface User {
   name: string;
   email: string;
-};
-type UserAuth = {
-  isLoggedIn: boolean;
+}
+
+interface UserAuth {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-};
+}
+
 const AuthContext = createContext<UserAuth | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // fetch if the user's cookies are valid then skip login
-    async function checkStatus() {
-      const data = await checkAuthStatus();
-      if (data) {
-        setUser({ email: data.email, name: data.name });
-        setIsLoggedIn(true);
+    // Check authentication status on initial load
+    const checkAuth = async () => {
+      try {
+        const data = await checkAuthStatus();
+        setUser(data);
+      } catch (error) {
+        // If 401, user is not logged in - this is normal
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    }
-    checkStatus();
+    };
+
+    checkAuth();
   }, []);
+
   const login = async (email: string, password: string) => {
     const data = await loginUser(email, password);
-    if (data) {
-      setUser({ email: data.email, name: data.name });
-      setIsLoggedIn(true);
-    }
+    setUser(data);
   };
+
   const signup = async (name: string, email: string, password: string) => {
-    const data = await signupUser(name, email, password);
-    if (data) {
-      setUser({ email: data.email, name: data.name });
-      setIsLoggedIn(true);
-    }
+    // Signup no longer logs the user in automatically
+    await signupUser(name, email, password);
+    // Don't set user state here
   };
+
   const logout = async () => {
     await logoutUser();
-    setIsLoggedIn(false);
     setUser(null);
-    window.location.reload();
   };
 
   const value = {
     user,
-    isLoggedIn,
     login,
-    logout,
     signup,
+    logout,
   };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

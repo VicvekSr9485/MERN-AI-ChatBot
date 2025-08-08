@@ -1,28 +1,29 @@
 import React from "react";
-import Header from "./components/Header";
-import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
-import NotFound from "./pages/NotFound";
 import { useAuth } from "./context/AuthContext";
+
 function App() {
   const auth = useAuth();
 
   return (
-    <main>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        {auth?.isLoggedIn && auth?.user && (
-          <Route path="/chat" element={<Chat />} />
-        )}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </main>
+    <Routes>
+      <Route 
+        path="/login" 
+        element={auth?.user ? <Navigate to="/chat" /> : <Login />} 
+      />
+      <Route 
+        path="/signup" 
+        element={auth?.user ? <Navigate to="/chat" /> : <Signup />} 
+      />
+      <Route 
+        path="/chat" 
+        element={auth?.user ? <Chat /> : <Navigate to="/login" />} 
+      />
+      <Route path="/" element={<Navigate to={auth?.user ? "/chat" : "/signup"} />} />
+    </Routes>
   );
 }
 

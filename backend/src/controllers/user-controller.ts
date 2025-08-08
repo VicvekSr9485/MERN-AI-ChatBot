@@ -94,35 +94,11 @@ export const userSignup = [
             const user = new User({ name, email, password: hashedPassword });
             await user.save();
 
-            // Create token and store cookie
-            const token = createToken(user._id.toString(), user.email, "7d");
-            const expires = new Date();
-            expires.setDate(expires.getDate() + 7);
-            
-            // Clear existing cookie first
-            res.clearCookie(COOKIE_NAME, {
-                httpOnly: true,
-                signed: true,
-                path: "/",
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-            });
-            
-            // Set new cookie
-            res.cookie(COOKIE_NAME, token, {
-                path: "/",
-                domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
-                expires,
-                httpOnly: true,
-                signed: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-            });
-            
+            // Return success message 
             return res.status(201).json({ 
-                message: "OK", 
-                name: user.name, 
-                email: user.email 
+                message: "User registered successfully. Please login to continue.",
+                name: user.name,
+                email: user.email
             });
         } catch (error) {
             console.error("Signup error:", error);
@@ -131,7 +107,6 @@ export const userSignup = [
         }
     }
 ];
-
 export const userLogin = [
     loginLimiter,
     async (req: Request, res: Response, next: NextFunction) => {

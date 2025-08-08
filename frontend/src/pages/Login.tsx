@@ -7,27 +7,38 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const auth = useAuth();
   const navigate = useNavigate();
-  const  handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
+  const auth = useAuth();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    
     try {
-      toast.loading("Signing In", { id: "login" });
+      toast.loading("Logging In", { id: "login" });
       await auth?.login(email, password);
-      toast.success("Signed In Successfully", { id: "login" });
-    } catch (error) {
+      toast.success("Logged In Successfully", { id: "login" });
+      // The redirect will be handled by the useEffect below
+    } catch (error: any) {
       console.log(error);
-      toast.error("Signing In Failed", { id: "login" });
+      const errorMessage = error.response?.data?.message || "Login Failed";
+      toast.error(errorMessage, { id: "login" });
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
+
+  // If user is already logged in, redirect to chat
   useEffect(() => {
     if (auth?.user) {
-      return navigate("/chat");
+      navigate("/chat");
     }
-  },)
+  }, [auth?.user, navigate]);
+
   return (
     <Box width={"100%"} height={"100%"} display="flex" flex={1}>
       <Box padding={8} mt={8} display={{ md: "flex", sm: "none", xs: "none" }}>
@@ -69,8 +80,10 @@ const Login = () => {
             </Typography>
             <CustomizedInput type="email" name="email" label="Email" />
             <CustomizedInput type="password" name="password" label="Password" />
+            
             <Button
               type="submit"
+              disabled={isSubmitting}
               sx={{
                 px: 2,
                 py: 1,
@@ -85,13 +98,26 @@ const Login = () => {
               }}
               endIcon={<IoIosLogIn />}
             >
-              Login
+              {isSubmitting ? "Logging In..." : "Login"}
             </Button>
+            
+            <Box mt={2} textAlign="center">
+              <Typography variant="body2">
+                Don't have an account?{" "}
+                <Button
+                  variant="text"
+                  onClick={() => navigate("/signup")}
+                  sx={{ textTransform: "none", padding: 0, minWidth: "auto" }}
+                >
+                  Signup
+                </Button>
+              </Typography>
+            </Box>
           </Box>
         </form>
       </Box>
     </Box>
   );
-}
+};
 
-export default Login
+export default Login;

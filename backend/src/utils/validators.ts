@@ -38,12 +38,21 @@ export const signUpValidator = [
     body("name")
         .trim()
         .notEmpty()
-        .withMessage("Name is required")
+        .withMessage("name is required")
         .isLength({ min: 2, max: 50 })
-        .withMessage("Name must be between 2 and 50 characters")
+        .withMessage("name must be between 2 and 50 characters")
         .escape(),
-    
-    ...loginValidator
+    body("email")
+        .trim()
+        .isEmail()
+        .withMessage("email is required")
+        .normalizeEmail(),
+    body("password")
+        .trim()
+        .isLength({ min: 8 })
+        .withMessage("password must be at least 8 characters")
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "i")
+        .withMessage("password must include uppercase, lowercase, numbers, and special characters")
 ];
 
 export const chatCompletionValidator = [

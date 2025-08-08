@@ -72,6 +72,11 @@ export const generateChatCompletion = [
                     return res.status(429).json({ message: "Gemini API quota exceeded" });
                 }
                 
+                // Handle network errors
+                if (geminiError.code === 'ECONNREFUSED' || geminiError.code === 'ENOTFOUND') {
+                    return res.status(502).json({ message: "Failed to connect to AI service" });
+                }
+                
                 return res.status(502).json({ message: "Failed to get response from AI service" });
             }
         } catch (error) {

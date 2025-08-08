@@ -13,11 +13,30 @@ export const signupUser = async (
   email: string,
   password: string
 ) => {
-  const res = await axios.post("/user/signup", { name, email, password });
-  if (res.status !== 201) {
+  try {
+    const res = await axios.post("/user/signup", { name, email, password });
+    if (res.status !== 201) {
+      throw new Error("Unable to Signup");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display validation errors if they exist
+      if (error.response.status === 422 && error.response.data.errors) {
+        const firstError = error.response.data.errors[0];
+        throw new Error(firstError.msg);
+      }
+      
+      // Display other error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+    }
     throw new Error("Unable to Signup");
   }
-  return res.data;
 };
 
 export const checkAuthStatus = async () => {
@@ -29,27 +48,66 @@ export const checkAuthStatus = async () => {
 };
 
 export const sendChatRequest = async (message: string) => {
-  const res = await axios.post("/chat/new", { message });
-  if (res.status !== 200) {
+  try {
+    const res = await axios.post("/chat/new", { message });
+    if (res.status !== 200) {
+      throw new Error("Unable to send chat");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display specific error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+    }
     throw new Error("Unable to send chat");
   }
-  return res.data;
 };
 
 export const getUserChats = async () => {
-  const res = await axios.get("/chat/all-chats");
-  if (res.status !== 200) {
+  try {
+    const res = await axios.get("/chat/all-chats");
+    if (res.status !== 200) {
+      throw new Error("Unable to fetch chats");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display specific error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+    }
     throw new Error("Unable to fetch chats");
   }
-  return res.data;
 };
 
 export const deleteUserChats = async () => {
-  const res = await axios.delete("/chat/delete");
-  if (res.status !== 200) {
+  try {
+    const res = await axios.delete("/chat/delete");
+    if (res.status !== 200) {
+      throw new Error("Unable to delete chats");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display specific error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+    }
     throw new Error("Unable to delete chats");
   }
-  return res.data;
 };
 
 export const logoutUser = async () => {

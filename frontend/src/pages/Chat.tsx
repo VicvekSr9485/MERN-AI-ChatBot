@@ -1,198 +1,251 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Box, Avatar, Typography, Button, IconButton } from "@mui/material";
-import red from "@mui/material/colors/red";
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Typography, Button, TextField, IconButton } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
-import ChatItem from "../components/chat/ChatItem";
-import { IoMdSend } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import {
-  deleteUserChats,
-  getUserChats,
-  sendChatRequest,
-} from "../helpers/api-communicator";
-import toast from "react-hot-toast";
-type Message = {
-  role: "user" | "assistant";
+import { toast } from "react-hot-toast";
+import { sendChatRequest, getUserChats, deleteUserChats } from "../helpers/api-communicator";
+import ChatItem from "../components/chat/ChatItem";
+import { Home, Logout, Delete, Send } from "@mui/icons-material";
+
+interface ChatMessage {
+  role: string;
   content: string;
-};
+  timestamp: Date;
+}
+
 const Chat = () => {
-  const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const auth = useAuth();
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const handleSubmit = async () => {
-    const content = inputRef.current?.value as string;
-    if (inputRef && inputRef.current) {
-      inputRef.current.value = "";
-    }
-    const newMessage: Message = { role: "user", content };
-    setChatMessages((prev) => [...prev, newMessage]);
-    const chatData = await sendChatRequest(content);
-    setChatMessages([...chatData.chats]);
-    //
+  const navigate = useNavigate();
+  const [inputMessage, setInputMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch chat history when component mounts
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const data = await getUserChats();
+        if (data.chats && Array.isArray(data.chats)) {
+          setChatMessages(data.chats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        toast.error("Failed to load chat history");
+      }
+    };
+
+    fetchChats();
+  }, []);
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    // Add user message to the chat
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: inputMessage,
+      timestamp: new Date(),
+    };
+    setChatMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      // Send message to backend
+      const data = await sendChatRequest(inputMessage);
+      
+      // Add AI response to the chat
+      if (data.chats && Array.isArray(data.chats) && data.chats.length > 0) {
+        const lastMessage = data.chats[data.chats.length - 1];
+        if (lastMessage && lastMessage.role === "assistant") {
+          setChatMessages((prev) => [...prev, lastMessage]);
+        }
+      }
+    } catch (error: any) {
+      console.error("Failed to send message:", error);
+      toast.error(error.response?.data?.message || "Failed to send message");
+      
+      // Remove the user message if the request failed
+      setChatMessages((prev) => prev.slice(0, -1));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth?.logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
+  };
+
   const handleDeleteChats = async () => {
     try {
-      toast.loading("Deleting Chats", { id: "deletechats" });
       await deleteUserChats();
       setChatMessages([]);
-      toast.success("Deleted Chats Successfully", { id: "deletechats" });
+      toast.success("Chat history deleted");
     } catch (error) {
-      console.log(error);
-      toast.error("Deleting chats failed", { id: "deletechats" });
+      toast.error("Failed to delete chat history");
     }
   };
-  useLayoutEffect(() => {
-    if (auth?.isLoggedIn && auth.user) {
-      toast.loading("Loading Chats", { id: "loadchats" });
-      getUserChats()
-        .then((data) => {
-          setChatMessages([...data.chats]);
-          toast.success("Successfully loaded chats", { id: "loadchats" });
-        })
-        .catch((err) => {
-          console.log(err);
-          toast.error("Loading Failed", { id: "loadchats" });
-        });
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }, [auth]);
-  useEffect(() => {
-    if (!auth?.user) {
-      return navigate("/login");
-    }
-  }, [auth]);
+  };
+
   return (
     <Box
-      sx={{
-        display: "flex",
-        flex: 1,
-        width: "100%",
-        height: "100%",
-        mt: 3,
-        gap: 3,
-      }}
+      width="100%"
+      height="100vh"
+      display="flex"
+      flexDirection="column"
+      bgcolor="#121212"
+      color="white"
     >
+      {/* Header with navigation buttons */}
       <Box
-        sx={{
-          display: { md: "flex", xs: "none", sm: "none" },
-          flex: 0.2,
-          flexDirection: "column",
-        }}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        p={2}
+        borderBottom="1px solid #333"
       >
-        <Box
-          sx={{
-            display: "flex",
-            width: "100%",
-            height: "60vh",
-            bgcolor: "rgb(17,29,39)",
-            borderRadius: 5,
-            flexDirection: "column",
-            mx: 3,
-          }}
-        >
-          <Avatar
-            sx={{
-              mx: "auto",
-              my: 2,
-              bgcolor: "white",
-              color: "black",
-              fontWeight: 700,
-            }}
-          >
-            {auth?.user?.name[0]}
-          </Avatar>
-          <Typography sx={{ mx: "auto", fontFamily: "work sans" }}>
-            You are talking to a ChatBOT
+        <Box display="flex" alignItems="center">
+          <Typography variant="h5">
+            Chat with AI
           </Typography>
-          <Typography sx={{ mx: "auto", fontFamily: "work sans", my: 4, p: 3 }}>
-            You can ask some questions related to Knowledge, Business, Advices,
-            Education, etc. But avoid sharing personal information
-          </Typography>
+        </Box>
+        <Box display="flex" gap={1}>
           <Button
-            onClick={handleDeleteChats}
-            sx={{
-              width: "200px",
-              my: "auto",
-              color: "white",
-              fontWeight: "700",
-              borderRadius: 3,
-              mx: "auto",
-              bgcolor: red[300],
-              ":hover": {
-                bgcolor: red.A400,
-              },
-            }}
+            variant="outlined"
+            color="secondary"
+            startIcon={<Home />}
+            onClick={() => navigate("/")}
           >
-            Clear Conversation
+            Home
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<Delete />}
+            onClick={handleDeleteChats}
+          >
+            Clear Chat
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<Logout />}
+            onClick={handleLogout}
+          >
+            Logout
           </Button>
         </Box>
       </Box>
+
+      {/* Chat messages container */}
       <Box
-        sx={{
-          display: "flex",
-          flex: { md: 0.8, xs: 1, sm: 1 },
-          flexDirection: "column",
-          px: 3,
-        }}
+        flex={1}
+        overflow="auto"
+        p={2}
+        display="flex"
+        flexDirection="column"
       >
-        <Typography
+        {chatMessages.length === 0 ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
+            <Typography variant="h6" color="textSecondary">
+              No messages yet. Start a conversation!
+            </Typography>
+          </Box>
+        ) : (
+          chatMessages.map((message, index) => (
+            <ChatItem
+              key={index}
+              role={message.role}
+              content={message.content}
+              timestamp={message.timestamp}
+            />
+          ))
+        )}
+        {isLoading && (
+          <Box display="flex" justifyContent="flex-start" mb={2}>
+            <Box
+              maxWidth="70%"
+              bgcolor="#1e1e1e"
+              color="white"
+              p={2}
+              borderRadius={2}
+            >
+              <Typography variant="body1">AI is thinking...</Typography>
+            </Box>
+          </Box>
+        )}
+        <div ref={messagesEndRef} />
+      </Box>
+
+      {/* Message input */}
+      <Box
+        display="flex"
+        p={2}
+        borderTop="1px solid #333"
+        bgcolor="#1e1e1e"
+      >
+        <TextField
+          fullWidth
+          multiline
+          maxRows={4}
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Type your message..."
+          variant="outlined"
           sx={{
-            fontSize: "40px",
-            color: "white",
-            mb: 2,
-            mx: "auto",
-            fontWeight: "600",
-          }}
-        >
-          Model - GPT 3.5 Turbo
-        </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            height: "60vh",
-            borderRadius: 3,
-            mx: "auto",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "scroll",
-            overflowX: "hidden",
-            overflowY: "auto",
-            scrollBehavior: "smooth",
-          }}
-        >
-          {chatMessages.map((chat, index) => (
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            <ChatItem content={chat.content} role={chat.role} key={index} />
-          ))}
-        </Box>
-        <div
-          style={{
-            width: "100%",
-            borderRadius: 8,
-            backgroundColor: "rgb(17,27,39)",
-            display: "flex",
-            margin: "auto",
-          }}
-        >
-          {" "}
-          <input
-            ref={inputRef}
-            type="text"
-            style={{
-              width: "100%",
-              backgroundColor: "transparent",
-              padding: "30px",
-              border: "none",
-              outline: "none",
+            "& .MuiOutlinedInput-root": {
               color: "white",
-              fontSize: "20px",
-            }}
-          />
-          <IconButton onClick={handleSubmit} sx={{ color: "white", mx: 1, mt: 4, }}>
-            <IoMdSend />
-          </IconButton>
-        </div>
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#555",
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#777",
+            },
+            "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#00fffc",
+            },
+          }}
+          InputProps={{
+            style: { color: "white" },
+          }}
+        />
+        <IconButton
+          color="primary"
+          onClick={handleSendMessage}
+          disabled={isLoading || !inputMessage.trim()}
+          sx={{ ml: 1 }}
+        >
+          <Send />
+        </IconButton>
       </Box>
     </Box>
   );
