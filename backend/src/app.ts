@@ -25,7 +25,7 @@ app.use(
 // CORS configuration - more permissive for development
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://https://mern-ai-assistant.vercel.app/"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
