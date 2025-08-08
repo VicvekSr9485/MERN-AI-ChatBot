@@ -61,7 +61,7 @@ export const refreshToken = (req: Request, res: Response) => {
             httpOnly: true,
             signed: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'none',
         });
         
         return res.status(200).json({ message: "Token refreshed" });

@@ -168,7 +168,7 @@ export const userLogin = [
                 httpOnly: true,
                 signed: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                sameSite: 'none',
             });
             
             console.log("Login successful for email:", email);
