@@ -1,3 +1,4 @@
+// user-controller.ts
 import { NextFunction, Request, Response } from "express";
 import User from "../models/User.js";
 import { hash, compare } from "bcrypt";
@@ -62,7 +63,8 @@ export const getAllUsers = async (
         });
     } catch (error) {
         console.error("Get all users error:", error);
-        return res.status(500).json({ message: "ERROR", cause: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        return res.status(500).json({ message: "ERROR", cause: errorMessage });
     }
 };
 
@@ -124,7 +126,8 @@ export const userSignup = [
             });
         } catch (error) {
             console.error("Signup error:", error);
-            return res.status(500).json({ message: "ERROR", cause: error.message });
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            return res.status(500).json({ message: "ERROR", cause: errorMessage });
         }
     }
 ];
@@ -182,7 +185,8 @@ export const userLogin = [
             });
         } catch (error) {
             console.error("Login error:", error);
-            return res.status(500).json({ message: "ERROR", cause: error.message });
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            return res.status(500).json({ message: "ERROR", cause: errorMessage });
         }
     }
 ];
@@ -205,7 +209,8 @@ export const verifyUser = async (
         });
     } catch (error) {
         console.error("Verify user error:", error);
-        return res.status(500).json({ message: "ERROR", cause: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        return res.status(500).json({ message: "ERROR", cause: errorMessage });
     }
 };
 
@@ -231,6 +236,7 @@ export const userLogout = async (
         return res.status(200).json({ message: "OK" });
     } catch (error) {
         console.error("Logout error:", error);
-        return res.status(500).json({ message: "ERROR", cause: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        return res.status(500).json({ message: "ERROR", cause: errorMessage });
     }
 };

@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/User.js";
-import { configureOpenAI } from "../config/openai-config.js";
-import { OpenAIApi, ChatCompletionRequestMessage } from "openai";
-
-// Add rate limiting middleware
+import { configureGemini } from "../config/gemini-config.js";
+import { getGeminiModel, formatGeminiMessages } from "../utils/geminiUtils.js";
 import rateLimit from 'express-rate-limit';
 
+// Add rate limiting middleware
 const chatLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 30, // limit each IP to 30 requests per windowMs
@@ -28,49 +27,57 @@ export const generateChatCompletion = [
                 return res.status(401).json({ message: "User not registered OR Token malfunctioned" });
             }
 
-            // Limit chat history to prevent memory issues
-            const maxHistoryLength = 50;
-            const chats = user.chats.slice(-maxHistoryLength).map(({ role, content }) => ({
-                role,
-                content,
-            })) as ChatCompletionRequestMessage[];
-            
-            chats.push({ content: message, role: "user" });
+            // Initialize Gemini
+            const genAI = configureGemini();
+            const selectedModel = getGeminiModel("gemini-pro");
+            const model = genAI.getGenerativeModel({ model: selectedModel });
+
+            // Format chat history for Gemini
+            const chatHistory = formatGeminiMessages(user.chats);
+
+            // Start a chat with history
+            const chat = model.startChat({
+                history: chatHistory,
+                generationConfig: {
+                    maxOutputTokens: 1000,
+                    temperature: 0.7,
+                },
+            });
+
+            // Add the new message to the user's chat history
             user.chats.push({ content: message, role: "user" });
 
-            const config = configureOpenAI();
-            const openai = new OpenAIApi(config);
-
             try {
-                const chatResponse = await openai.createChatCompletion({
-                    model: "gpt-3.5-turbo",
-                    messages: chats,
-                    max_tokens: 1000, // Add token limit
-                    temperature: 0.7, // Add temperature control
-                });
-
-                const assistantMessage = chatResponse.data.choices[0].message;
-                if (!assistantMessage) {
-                    throw new Error("No response from OpenAI");
-                }
+                // Send message to Gemini
+                const result = await chat.sendMessage(message);
+                const response = await result.response;
+                const text = response.text();
+                
+                // Add Gemini's response to the user's chat history
+                const assistantMessage = {
+                    role: "assistant",
+                    content: text,
+                    timestamp: new Date()
+                };
 
                 user.chats.push(assistantMessage);
                 await user.save();
                 
                 return res.status(200).json({ chats: user.chats });
-            } catch (openaiError: any) {
-                console.error("OpenAI API Error:", openaiError.response?.data || openaiError.message);
+            } catch (geminiError: any) {
+                console.error("Gemini API Error:", geminiError);
                 
-                // Handle specific OpenAI errors
-                if (openaiError.response?.status === 429) {
-                    return res.status(429).json({ message: "OpenAI API rate limit exceeded" });
+                // Handle specific Gemini errors
+                if (geminiError.message?.includes('quota')) {
+                    return res.status(429).json({ message: "Gemini API quota exceeded" });
                 }
                 
                 return res.status(502).json({ message: "Failed to get response from AI service" });
             }
         } catch (error) {
             console.error("Chat completion error:", error);
-            return res.status(500).json({ message: "Something went wrong" });
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            return res.status(500).json({ message: "Something went wrong", cause: errorMessage });
         }
     }
 ];
@@ -96,7 +103,8 @@ export const sendChatsToUser = async (
         return res.status(200).json({ message: "OK", chats });
     } catch (error) {
         console.error("Send chats error:", error);
-        return res.status(500).json({ message: "ERROR", cause: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        return res.status(500).json({ message: "ERROR", cause: errorMessage });
     }
 };
 
@@ -111,11 +119,13 @@ export const deleteChats = async (
             return res.status(401).json({ message: "User not registered OR Token malfunctioned" });
         }
         
-        user.chats.splice(0, user.chats.length);
+        // Fix: Use set() method to properly clear the DocumentArray
+        user.set('chats', []);
         await user.save();
         return res.status(200).json({ message: "OK" });
     } catch (error) {
         console.error("Delete chats error:", error);
-        return res.status(500).json({ message: "ERROR", cause: error.message });
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        return res.status(500).json({ message: "ERROR", cause: errorMessage });
     }
 };

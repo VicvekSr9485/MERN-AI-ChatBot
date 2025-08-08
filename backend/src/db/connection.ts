@@ -1,4 +1,7 @@
-import { connect, disconnect, connection } from "mongoose";
+import mongoose from 'mongoose';
+
+// Extract the required functions from the default export
+const { connect, disconnect, connection } = mongoose;
 
 const connectOptions = {
     maxPoolSize: 10, // Maintain up to 10 socket connections

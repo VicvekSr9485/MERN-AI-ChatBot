@@ -1,8 +1,9 @@
+// token-manager.ts
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { COOKIE_NAME, JWT_EXPIRES_IN } from "./constants.js";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { COOKIE_NAME } from "./constants.js";
 
-export const createToken = (id: string, email: string, expiresIn: string = JWT_EXPIRES_IN) => {
+export const createToken = (id: string, email: string, expiresIn: string) => {
     if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET environment variable is not set");
     }
@@ -22,7 +23,11 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     }
     
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string, email: string };
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET environment variable is not set");
+        }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload & { id: string, email: string };
         res.locals.jwtData = decoded;
         return next();
     } catch (error) {
@@ -39,8 +44,12 @@ export const refreshToken = (req: Request, res: Response) => {
     }
     
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string, email: string };
-        const newToken = createToken(decoded.id, decoded.email);
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET environment variable is not set");
+        }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload & { id: string, email: string };
+        const newToken = createToken(decoded.id, decoded.email, "7d");
         
         const expires = new Date();
         expires.setDate(expires.getDate() + 7);

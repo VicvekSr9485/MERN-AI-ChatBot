@@ -1,7 +1,10 @@
 import { randomUUID } from "crypto";
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const chatSchema = new mongoose.Schema({
+// Extract Schema from mongoose
+const { Schema } = mongoose;
+
+const chatSchema = new Schema({
     id: {
         type: String,
         default: randomUUID,
@@ -9,7 +12,7 @@ const chatSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['user', 'assistant', 'system'], // Validate role values
+        enum: ['user', 'assistant'], // Gemini uses these roles
     },
     content: {
         type: String,
@@ -23,7 +26,7 @@ const chatSchema = new mongoose.Schema({
     _id: false // Don't create _id for subdocuments
 });
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
     name: { 
         type: String, 
         required: true,
@@ -41,15 +44,17 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        select: false // Don't return password by default
+        select: false
     },
     chats: [chatSchema],
 }, {
-    timestamps: true // Add createdAt and updatedAt
+    timestamps: true
 });
 
 // Add indexes for performance
 userSchema.index({ email: 1 });
 userSchema.index({ createdAt: 1 });
 
-export default mongoose.model("User", userSchema);
+// Create and export the model
+const User = mongoose.model("User", userSchema);
+export default User;

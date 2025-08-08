@@ -2,7 +2,7 @@ export const validateEnvironment = () => {
     const requiredEnvVars = [
         'MONGODB_URL',
         'JWT_SECRET',
-        'OPEN_AI_SECRET',
+        'GEMINI_API_KEY', // Changed from OPEN_AI_SECRET
         'COOKIE_SECRET'
     ];
     
