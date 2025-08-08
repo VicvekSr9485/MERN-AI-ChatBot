@@ -1,4 +1,4 @@
-// user-controller.ts
+// backend/src/controllers/user-controller.ts
 import { NextFunction, Request, Response } from "express";
 import User from "../models/User.js";
 import { hash, compare } from "bcrypt";
@@ -94,7 +94,7 @@ export const userSignup = [
             const user = new User({ name, email, password: hashedPassword });
             await user.save();
 
-            // Return success message 
+            // Return success message but don't log the user in
             return res.status(201).json({ 
                 message: "User registered successfully. Please login to continue.",
                 name: user.name,
@@ -107,6 +107,7 @@ export const userSignup = [
         }
     }
 ];
+
 export const userLogin = [
     loginLimiter,
     async (req: Request, res: Response, next: NextFunction) => {
@@ -118,14 +119,31 @@ export const userLogin = [
                 return res.status(400).json({ message: "Email and password are required" });
             }
             
-            const user = await User.findOne({ email });
+            console.log("Login attempt for email:", email);
+            
+            // Select password field explicitly
+            const user = await User.findOne({ email }).select('+password');
             if (!user) {
+                console.log("User not found for email:", email);
                 return res.status(401).json({ message: "Invalid credentials" });
             }
             
             const isPasswordCorrect = await compare(password, user.password);
             if (!isPasswordCorrect) {
+                console.log("Incorrect password for email:", email);
                 return res.status(401).json({ message: "Invalid credentials" });
+            }
+            
+            // Check if JWT_SECRET is set
+            if (!process.env.JWT_SECRET) {
+                console.error("JWT_SECRET is not set");
+                return res.status(500).json({ message: "Server configuration error" });
+            }
+            
+            // Check if COOKIE_SECRET is set
+            if (!process.env.COOKIE_SECRET) {
+                console.error("COOKIE_SECRET is not set");
+                return res.status(500).json({ message: "Server configuration error" });
             }
             
             // Create token and store cookie
@@ -152,6 +170,8 @@ export const userLogin = [
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
             });
+            
+            console.log("Login successful for email:", email);
             
             return res.status(200).json({ 
                 message: "OK", 

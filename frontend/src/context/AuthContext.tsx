@@ -1,5 +1,6 @@
+// frontend/src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { checkAuthStatus, loginUser, logoutUser, signupUser } from "../helpers/api-communicator.js";
+import { checkAuthStatus, loginUser, logoutUser, signupUser } from "../helpers/api-communicator";
 
 interface User {
   name: string;

@@ -1,11 +1,29 @@
+// frontend/src/api-communicator.ts
 import axios from "axios";
 
 export const loginUser = async (email: string, password: string) => {
-  const res = await axios.post("/user/login", { email, password });
-  if (res.status !== 200) {
+  try {
+    const res = await axios.post("/user/login", { email, password });
+    if (res.status !== 200) {
+      throw new Error("Unable to login");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display specific error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+      
+      if (error.response.data.cause) {
+        throw new Error(error.response.data.cause);
+      }
+    }
     throw new Error("Unable to login");
   }
-  return res.data;
 };
 
 export const signupUser = async (
@@ -40,11 +58,20 @@ export const signupUser = async (
 };
 
 export const checkAuthStatus = async () => {
-  const res = await axios.get("/user/auth-status");
-  if (res.status !== 200) {
+  try {
+    const res = await axios.get("/user/auth-status");
+    if (res.status !== 200) {
+      throw new Error("Unable to authenticate");
+    }
+    return res.data;
+  } catch (error: any) {
+    // If 401, user is not logged in - this is normal
+    if (error.response?.status === 401) {
+      throw new Error("Not authenticated");
+    }
+    console.error("Auth status error:", error);
     throw new Error("Unable to authenticate");
   }
-  return res.data;
 };
 
 export const sendChatRequest = async (message: string) => {
@@ -111,9 +138,22 @@ export const deleteUserChats = async () => {
 };
 
 export const logoutUser = async () => {
-  const res = await axios.get("/user/logout");
-  if (res.status !== 200) {
+  try {
+    const res = await axios.get("/user/logout");
+    if (res.status !== 200) {
+      throw new Error("Unable to logout");
+    }
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      
+      // Display specific error messages
+      if (error.response.data.message) {
+        throw new Error(error.response.data.message);
+      }
+    }
     throw new Error("Unable to logout");
   }
-  return res.data;
 };

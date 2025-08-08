@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
+import Home from "./pages/Home";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
@@ -22,7 +23,10 @@ function App() {
         path="/chat" 
         element={auth?.user ? <Chat /> : <Navigate to="/login" />} 
       />
-      <Route path="/" element={<Navigate to={auth?.user ? "/chat" : "/signup"} />} />
+      <Route 
+        path="/" 
+        element={auth?.user ? <Navigate to="/chat" /> : <Home />} 
+      />
     </Routes>
   );
 }

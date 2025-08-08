@@ -128,7 +128,7 @@ const Chat = () => {
       >
         <Box display="flex" alignItems="center">
           <Typography variant="h5">
-            Chat with AI
+            Your AI Chat Assistant
           </Typography>
         </Box>
         <Box display="flex" gap={1}>

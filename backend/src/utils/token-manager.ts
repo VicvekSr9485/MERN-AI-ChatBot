@@ -1,4 +1,4 @@
-// token-manager.ts
+// backend/src/utils/token-manager.ts
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { COOKIE_NAME } from "./constants.js";
@@ -49,7 +49,7 @@ export const refreshToken = (req: Request, res: Response) => {
         }
         
         const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload & { id: string, email: string };
-        const newToken = createToken(decoded.id, decoded.email, "7d");
+        const newToken = createToken(decoded.id, decoded.email, "7D");
         
         const expires = new Date();
         expires.setDate(expires.getDate() + 7);
