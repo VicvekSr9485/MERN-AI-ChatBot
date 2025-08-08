@@ -48,9 +48,11 @@ MERN-AI-ChatBot/
 │   │   │   └── typer/       # Typing animation component
 │   │   ├── context/         # React context (AuthContext)
 │   │   ├── pages/           # Page components (Home, Login, Signup, Chat)
-│   │   ├── App.js           # Main App component
-│   │   └── index.js         # Entry point
+│   │   ├── App.tsx           # Main App component
+│   │   └── index.tsx         # Entry point
+|   ├── index.html
 │   └── package.json
+|   
 ├── backend/src               # Node.js/Express backend
 │   ├── config/              # Configuration files
 │   ├── controllers/         # Route controllers
