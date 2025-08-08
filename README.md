@@ -1,4 +1,4 @@
-# MERN AI Chatbot
+# MERN AI CHAT ASSISTANT
 
 A full-stack AI-powered chatbot application built with the **MERN stack** (MongoDB, Express, React, Node.js) and integrated with **Google's Gemini API** for intelligent conversations.
 
@@ -39,7 +39,7 @@ A full-stack AI-powered chatbot application built with the **MERN stack** (Mongo
 ```
 
 MERN-AI-ChatBot/
-├── client/                 # React frontend
+├── frontend/                 # React frontend
 │   ├── public/              # Static files
 │   ├── src/
 │   │   ├── components/      # Reusable components
@@ -48,17 +48,19 @@ MERN-AI-ChatBot/
 │   │   │   └── typer/       # Typing animation component
 │   │   ├── context/         # React context (AuthContext)
 │   │   ├── pages/           # Page components (Home, Login, Signup, Chat)
-│   │   ├── App.js           # Main App component
-│   │   └── index.js         # Entry point
+│   │   ├── App.tsx           # Main App component
+│   │   └── index.tsx         # Entry point
+|   ├── index.html
 │   └── package.json
-├── server/                  # Node.js/Express backend
+|   
+├── backend/src               # Node.js/Express backend
 │   ├── config/              # Configuration files
 │   ├── controllers/         # Route controllers
 │   ├── middleware/          # Custom middleware (auth, etc.)
 │   ├── models/              # MongoDB models (User, etc.)
-│   ├── routes/              # API routes
-│   ├── .env                  # Environment variables
-│   ├── server.js            # Server entry point
+│   ├── routes/              # API routes     
+│   ├── app.ts               # app components
+│   ├── index.ts            # Server entry point
 │   └── package.json
 └── README.md
 
@@ -77,45 +79,48 @@ MERN-AI-ChatBot/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/VicvekSr9485/MERN-AI-ChatBot.git
-cd MERN-AI-ChatBot
+git clone https://github.com/VicvekSr9485/MERN-AI-ASSISTANT.git
+cd MERN-AI-ASSISTANT
 ````
 
 2. **Install dependencies**
 
 ```bash
-# Server
-cd server
+# backend
+cd backend
 npm install
 
 # Client
-cd ../client
+cd frontend
 npm install
 ```
 
 3. **Setup environment variables**
-   Create a `.env` file in the `server` directory:
+   Create a `.env` file in the `backend` directory:
 
 ```
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GEMINI_API_KEY=your_gemini_api_key
+COOKIE_SECRET=your_cookie_secret
+COOKIE_DOMAIN=your_cookie_domain
 ```
 
 4. **Run the application**
 
 ```bash
 # Start server
-cd server
+cd backend
 npm start
+npm run dev
 
 # Start client
-cd ../client
-npm start
+cd frontend
+npm run dev
 ```
 
 5. **Access the app** at:
-   [http://localhost:3000](http://localhost:3000)
+   [http://localhost:5173](http://localhost:5173)
 
 ---
 
@@ -123,13 +128,13 @@ npm start
 
 ### Client-Side
 
-* **Home Page (`Home.js`)**
+* **Home Page (`Home.tsx`)**
 
   * Landing page with typing animation, images, and preview of the chat interface
   * Buttons for signup/login
   * Fully responsive
 
-* **Authentication Pages (`Login.js`, `Signup.js`)**
+* **Authentication Pages (`Login.tsx`, `Signup.tsx`)**
 
   * Forms with validation & error handling
   * Navigation between login/signup
@@ -179,7 +184,7 @@ Registers a new user
 **Body:**
 
 ```json
-{ "name": "John", "email": "john@example.com", "password": "secret" }
+{ "name": "John", "email": "john@example.com", "password": "Password123!" }
 ```
 
 #### POST `/api/auth/login`
@@ -188,7 +193,7 @@ Logs in an existing user
 **Body:**
 
 ```json
-{ "email": "john@example.com", "password": "secret" }
+{ "email": "john@example.com", "password": "Password123!" }
 ```
 
 ### Chat
