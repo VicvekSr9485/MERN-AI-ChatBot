@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { IoIosLogIn } from "react-icons/io";
+import { IoIosLogIn, IoMdHome } from "react-icons/io";
 import { Box, Typography, Button } from "@mui/material";
 import CustomizedInput from "../components/shared/CustomizedInput";
 import { toast } from "react-hot-toast";
@@ -39,8 +39,32 @@ const Login = () => {
     }
   }, [auth?.user, navigate]);
 
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
   return (
-    <Box width={"100%"} height={"100%"} display="flex" flex={1}>
+    <Box width={"100%"} height={"100%"} display="flex" flex={1} position="relative">
+      {/* Home Button */}
+      <Button
+        variant="contained"
+        startIcon={<IoMdHome />}
+        onClick={handleGoHome}
+        sx={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          zIndex: 1,
+          bgcolor: "#00fffc",
+          ":hover": {
+            bgcolor: "white",
+            color: "black",
+          },
+        }}
+      >
+        Home
+      </Button>
+
       <Box padding={8} mt={8} display={{ md: "flex", sm: "none", xs: "none" }}>
         <img src="airobot.png" alt="Robot" style={{ width: "400px" }} />
       </Box>

@@ -1,4 +1,4 @@
-import { Box, useMediaQuery, useTheme } from "@mui/material";
+import { Box, useMediaQuery, useTheme, Button } from "@mui/material";
 import React from "react";
 import TypingAnimation from "../components/typer/TypingAnimation";
 import Footer from "../components/footer/Footer";
@@ -6,8 +6,33 @@ import Footer from "../components/footer/Footer";
 const Home = () => {
   const theme = useTheme();
   const isBelowMd = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
     <Box width={"100%"} height={"100%"}>
+      {/* Header with login/signup buttons */}
+      <Box 
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          p: 2,
+          width: "100%",
+        }}
+      >
+        <Button 
+          variant="outlined" 
+          sx={{ mr: 2 }}
+          onClick={() => window.location.href = "/login"}
+        >
+          Login
+        </Button>
+        <Button 
+          variant="contained"
+          onClick={() => window.location.href = "/signup"}
+        >
+          Sign Up
+        </Button>
+      </Box>
+      
       <Box
         sx={{
           display: "flex",
