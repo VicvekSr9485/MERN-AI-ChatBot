@@ -1,7 +1,7 @@
-import jwt, { JwtPayload, SignOptions, Secret } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
+import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
 import { COOKIE_NAME } from "./constants.js";
-import type { StringValue } from "ms";
+import { setAuthCookie } from "./setAuthCookie.js";
 
 const getJwtSecret = (): Secret => {
   if (!process.env.JWT_SECRET) {
@@ -10,32 +10,20 @@ const getJwtSecret = (): Secret => {
   return process.env.JWT_SECRET as Secret;
 };
 
-export const createToken = (
-  id: string,
-  email: string,
-  expiresIn: string
-): string => {
+export const createToken = (id: string, email: string, expiresIn: SignOptions["expiresIn"] = "7d"): string => {
   const payload = { id, email };
-  const options: SignOptions = { expiresIn: "7d" as StringValue }; // explicitly typed
-  return jwt.sign(payload, getJwtSecret(), options); // TS picks correct overload
+  const options: SignOptions = { expiresIn };
+  return jwt.sign(payload, getJwtSecret(), options);
 };
 
-export const verifyToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const token = req.signedCookies[COOKIE_NAME];
-
+export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.signedCookies?.[COOKIE_NAME];
   if (!token || token.trim() === "") {
     return res.status(401).json({ message: "Authentication required" });
   }
 
   try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload & {
-      id: string;
-      email: string;
-    };
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload & { id: string; email: string };
     res.locals.jwtData = decoded;
     return next();
   } catch (error) {
@@ -45,35 +33,16 @@ export const verifyToken = (
 };
 
 export const refreshToken = (req: Request, res: Response) => {
-  const token = req.signedCookies[COOKIE_NAME];
-
+  const token = req.signedCookies?.[COOKIE_NAME];
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
 
   try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload & {
-      id: string;
-      email: string;
-    };
-    const newToken = createToken(decoded.id, decoded.email, "7d"); // ✅ lowercase unit
-
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
-
-    res.cookie(COOKIE_NAME, newToken, {
-      path: "/",
-      domain:
-        process.env.NODE_ENV === "production"
-          ? process.env.COOKIE_DOMAIN
-          : undefined,
-      expires,
-      httpOnly: true,
-      signed: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-    });
-
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload & { id: string; email: string };
+    const newToken = createToken(decoded.id, decoded.email, "7d"); // lowercase 'd'
+    // Set cookie using helper (no domain)
+    setAuthCookie(res, newToken, { maxAge: 7 * 24 * 60 * 60 * 1000 });
     return res.status(200).json({ message: "Token refreshed" });
   } catch (error) {
     console.error("Token refresh error:", error);
