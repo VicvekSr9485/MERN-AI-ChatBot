@@ -56,20 +56,20 @@ const Home = () => {
           }}
         >
           <img
-            src="robot.png"
+            src="robott.png"
             alt="robot"
             style={{ width: "200px", margin: "auto" }}
           />
           <img
             className="image-inverted rotate"
-            src="openai.png"
-            alt="openai"
+            src="gemini.png"
+            alt="gemini"
             style={{ width: "200px", margin: "auto" }}
           />
         </Box>
         <Box sx={{ display: "flex", mx: "auto" }}>
           <img
-            src="chat.png"
+            src="nuclear.jpg"
             alt="chatbot"
             style={{
               display: "flex",
