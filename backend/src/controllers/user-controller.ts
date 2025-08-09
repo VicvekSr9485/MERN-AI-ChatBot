@@ -166,7 +166,7 @@ export const userLogin = [
                 expires,
                 httpOnly: true,
                 signed: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: true,
                 sameSite: 'none',
             });
             
