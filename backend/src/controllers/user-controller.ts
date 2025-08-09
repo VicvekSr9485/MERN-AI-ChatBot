@@ -157,7 +157,7 @@ export const userLogin = [
                 signed: true,
                 path: "/",
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                sameSite: 'none',
             });
             
             // Set new cookie
@@ -224,7 +224,7 @@ export const userLogout = async (
             signed: true,
             path: "/",
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'none',
         });
         
         return res.status(200).json({ message: "OK" });
