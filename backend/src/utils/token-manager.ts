@@ -56,7 +56,7 @@ export const refreshToken = (req: Request, res: Response) => {
       id: string;
       email: string;
     };
-    const newToken = createToken(decoded.id, decoded.email, "7d"); // ✅ lowercase unit
+    const newToken = createToken(decoded.id, decoded.email, "7d");
 
     const expires = new Date();
     expires.setDate(expires.getDate() + 7);

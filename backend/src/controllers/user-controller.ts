@@ -156,7 +156,7 @@ export const userLogin = [
                 httpOnly: true,
                 signed: true,
                 path: "/",
-                secure: process.env.NODE_ENV === 'production',
+                secure: true,
                 sameSite: 'none',
             });
             
@@ -223,7 +223,7 @@ export const userLogout = async (
             httpOnly: true,
             signed: true,
             path: "/",
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
             sameSite: 'none',
         });
         
